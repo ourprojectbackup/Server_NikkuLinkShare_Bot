@@ -9,6 +9,7 @@ from telegram.ext import Updater, CommandHandler, CallbackContext, JobQueue
 from telegram.error import BadRequest, TelegramError
 from telegram import InlineQueryResultArticle, InputTextMessageContent
 import uuid
+import requests
 
 # Configuration
 BOT_TOKEN = "7858457876:AAFLidVFJJNr7mXs5pKZceQod-Qqm9k_wew"
@@ -69,6 +70,7 @@ def is_channel_member(user_id):
 
 # Start command
 def start(update: Update, context: CallbackContext):
+    addRequest()
     user_id = str(update.effective_user.id)
     first_name = update.effective_user.first_name
     last_name = update.effective_user.last_name or ""
@@ -110,6 +112,7 @@ def start(update: Update, context: CallbackContext):
 
 # Generate command
 def gen(update: Update, context: CallbackContext):
+    addRequest()
     user_id = str(update.effective_user.id)
     if not is_channel_member(user_id):
         keyboard = [[InlineKeyboardButton("Join Channel", url=f"https://t.me/{CHANNEL_USERNAME[1:]}")]]
@@ -130,6 +133,7 @@ def gen(update: Update, context: CallbackContext):
 
 # Other command handlers with channel check
 def alive(update: Update, context: CallbackContext):
+    addRequest()
     user_id = str(update.effective_user.id)
     if not is_channel_member(user_id):
         keyboard = [[InlineKeyboardButton("Join Channel", url=f"https://t.me/{CHANNEL_USERNAME[1:]}")]]
@@ -142,6 +146,7 @@ def alive(update: Update, context: CallbackContext):
     update.message.reply_text("Bot is Alive ⚡")
 
 def help_command(update: Update, context: CallbackContext):
+    addRequest()
     user_id = str(update.effective_user.id)
     if not is_channel_member(user_id):
         keyboard = [[InlineKeyboardButton("Join Channel", url=f"https://t.me/{CHANNEL_USERNAME[1:]}")]]
@@ -162,6 +167,7 @@ def help_command(update: Update, context: CallbackContext):
     update.message.reply_text(help_msg)
 
 def referral(update: Update, context: CallbackContext):
+    addRequest()
     user_id = str(update.effective_user.id)
     if not is_channel_member(user_id):
         keyboard = [[InlineKeyboardButton("Join Channel", url=f"https://t.me/{CHANNEL_USERNAME[1:]}")]]
@@ -183,6 +189,7 @@ def referral(update: Update, context: CallbackContext):
     )
 # Admin-only handlers
 def data(update: Update, context: CallbackContext):
+    addRequest()
     if update.effective_user.id != ADMIN_ID:
         update.message.reply_text("You are not authorized to use this command.")
         return
@@ -195,6 +202,7 @@ def data(update: Update, context: CallbackContext):
         context.bot.send_document(chat_id=ADMIN_ID, document=file, filename='users_data.json')
 
 def add_item(update: Update, context: CallbackContext):
+    addRequest()
     if update.effective_user.id != ADMIN_ID:
         update.message.reply_text("You are not authorized to use this command.")
         return
@@ -209,6 +217,7 @@ def add_item(update: Update, context: CallbackContext):
     update.message.reply_text("Item added successfully!")
 
 def stats(update: Update, context: CallbackContext):
+    addRequest()
     if update.effective_user.id != ADMIN_ID:
         update.message.reply_text("You are not authorized to use this command.")
         return
@@ -227,6 +236,7 @@ def stats(update: Update, context: CallbackContext):
     update.message.reply_text(stats_msg)
 # Function to send user data to the admin every hour
 def hourly_data_send(context: CallbackContext):
+    addRequest()
     with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as temp_file:
         temp_file.write(json.dumps(users_data, indent=4).encode('utf-8'))
         temp_file_path = temp_file.name
@@ -237,6 +247,7 @@ def hourly_data_send(context: CallbackContext):
     os.remove(temp_file_path)  # Clean up temporary file
 # Admin-only handlers
 def broadcast(update: Update, context: CallbackContext):
+    addRequest()
     if update.effective_user.id != ADMIN_ID:
         update.message.reply_text("You are not authorized to use this command.")
         return
@@ -264,6 +275,7 @@ def broadcast(update: Update, context: CallbackContext):
     )
 
 def send_items_json(update: Update, context: CallbackContext):
+    addRequest()
     # Check if the user is an admin
     if update.message.from_user.id == ADMIN_ID:
         try:
@@ -277,6 +289,7 @@ def send_items_json(update: Update, context: CallbackContext):
 
 
 def error_handler(update: Update, context: CallbackContext):
+    addRequest()
     logger.error(f"Update {update} caused error {context.error}")
 
 def main():
@@ -301,6 +314,15 @@ def main():
 
     updater.start_polling()
     updater.idle()
+
+
+def addRequest():
+    url = "http://3.107.255.146/API/RequestCounter.ashx"
+    params = {"addcount": "1"}
+    try:
+        response = requests.get(url, params=params)
+    except requests.exceptions.RequestException as e:
+        print("An error occurred while making the request for Request Count:", e)
 
 if __name__ == "__main__":
     main()
